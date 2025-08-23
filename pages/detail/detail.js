@@ -41,7 +41,8 @@ Page({
     replyToId: null, // 回复目标的评论ID
     hasMoreComments: false, // 是否有更多评论
     commentPage: 1, // 当前评论页码
-    showingMoreReplies: {} // 记录哪些评论展开了更多回复
+    showingMoreReplies: {}, // 记录哪些评论展开了更多回复
+    isLoggingIn: false // 防止重复登录
   },
   
   onLoad(options) {
@@ -196,6 +197,14 @@ Page({
   
   // 处理登录
   handleLogin(callback) {
+    // 防止重复调用
+    if (this.data.isLoggingIn) {
+      console.log('正在登录中，避免重复调用');
+      return;
+    }
+    
+    this.setData({ isLoggingIn: true });
+    
     // getUserProfile必须在用户点击事件的直接回调中调用
     wx.getUserProfile({
       desc: '用于完善用户资料',
@@ -232,6 +241,7 @@ Page({
                       title: '登录失败',
                       icon: 'none'
                     });
+                    this.setData({ isLoggingIn: false });
                   }
                 },
                 fail: (err) => {
@@ -241,6 +251,7 @@ Page({
                     title: '登录失败',
                     icon: 'none'
                   });
+                  this.setData({ isLoggingIn: false });
                 }
               });
             } else {
@@ -250,6 +261,7 @@ Page({
                 title: '登录失败',
                 icon: 'none'
               });
+              this.setData({ isLoggingIn: false });
             }
           },
           fail: (err) => {
@@ -259,6 +271,7 @@ Page({
               title: '登录失败',
               icon: 'none'
             });
+            this.setData({ isLoggingIn: false });
           }
         });
       },
@@ -270,6 +283,7 @@ Page({
           title: '需要授权才能继续',
           icon: 'none'
         });
+        this.setData({ isLoggingIn: false });
       }
     });
   },
@@ -326,6 +340,9 @@ Page({
             icon: 'success'
           });
           
+          // 重置登录状态
+          this.setData({ isLoggingIn: false });
+          
           // 执行回调函数
           if (typeof callback === 'function') {
             setTimeout(callback, 500);
@@ -335,6 +352,7 @@ Page({
             title: '登录失败',
             icon: 'none'
           });
+          this.setData({ isLoggingIn: false });
         }
       },
       fail: (err) => {
@@ -344,6 +362,7 @@ Page({
           title: '登录失败',
           icon: 'none'
         });
+        this.setData({ isLoggingIn: false });
       }
     });
   },
