@@ -102,6 +102,10 @@
     </view>
     
     <!-- 评论输入框 -->
+    <view wx:if="{{replyTo}}" class="reply-indicator mb-8">
+      <text class="reply-text">回复 {{replyTo}}</text>
+      <text class="cancel-reply" bindtap="cancelReply">取消</text>
+    </view>
     <view class="comment-input-container mb-16">
       <input 
         class="comment-input input" 
@@ -146,15 +150,13 @@
                   <image class="reply-avatar" src="{{reply.creatorAvatar}}" mode="aspectFill"></image>
                   <view class="reply-user-info">
                     <text class="reply-username">{{reply.creatorName}}</text>
+                    <text class="reply-to" wx:if="{{reply.replyTo && reply.replyTo.userName}}"> 回复 {{reply.replyTo.userName}}</text>
                     <text class="reply-time">{{formatTime(reply.createTime)}}</text>
                   </view>
                 </view>
-                <view class="reply-content">
-                  <text class="reply-to" wx:if="{{reply.replyTo.userName}}">回复 {{reply.replyTo.userName}}：</text>
-                  {{reply.content}}
-                </view>
+                <view class="reply-content">{{reply.content}}</view>
                 <view class="reply-actions">
-                  <view class="action-item" bindtap="replyComment" data-id="{{item._id}}" data-name="{{reply.creatorName}}" data-parent="{{reply._id}}">
+                  <view class="action-item" bindtap="replyComment" data-id="{{reply._id}}" data-name="{{reply.creatorName}}">
                     <text class="action-icon">💬</text>
                     <text class="action-text">回复</text>
                   </view>
@@ -167,8 +169,8 @@
             </block>
             
             <!-- 查看更多回复 -->
-            <view class="more-replies" wx:if="{{item.replyCount > item.replies.length}}" bindtap="loadMoreReplies" data-id="{{item._id}}">
-              查看更多回复...
+            <view class="view-more-replies" wx:if="{{item.replyCount > 3 && !showingMoreReplies[item._id]}}" bindtap="showMoreReplies" data-id="{{item._id}}">
+              查看全部 {{item.replyCount}} 条回复
             </view>
           </view>
         </view>
@@ -241,4 +243,3 @@
   <!-- 登录授权弹窗 -->
   <auth-dialog id="authDialog"></auth-dialog>
 </view>
-

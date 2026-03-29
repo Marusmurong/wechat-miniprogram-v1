@@ -136,6 +136,9 @@ App({
       return;
     }
     
+    // 暂时注释掉数据库初始化检查，避免权限错误
+    // 数据库应该由管理员在云开发控制台手动创建
+    /*
     wx.cloud.callFunction({
       name: 'dbInit',
       data: {
@@ -159,18 +162,28 @@ App({
     }).catch(err => {
       console.error('数据库初始化检查失败:', err);
     });
+    */
+    
+    // 直接加载数据，不进行数据库初始化检查
+    this.refreshRankingData();
   },
   
   // 从云数据库刷新排行榜数据
   refreshRankingData() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       // 如果云开发已初始化
       if (wx.cloud) {
-        // 查询所有提名，不再过滤votes > 0
+        // 查询所有提名
         const db = wx.cloud.database();
+        const _ = db.command;
         db.collection('entries')
+          .where({
+            // 使用一个始终为真的条件来避免全表扫描警告
+            // votes 字段大于等于 0（包括所有条目）
+            votes: _.gte(0)
+          })
           .orderBy('votes', 'desc')
-          .limit(20) // 增加限制数量，确保能看到更多提名
+          .limit(50) // 增加限制数量，确保能看到更多提名
           .get()
           .then(res => {
             console.log('获取排行榜数据成功:', res);
@@ -192,6 +205,9 @@ App({
               
               // 更新全局数据
               this.globalData.rankings = rankings;
+            } else {
+              // 如果没有数据，保持空数组
+              this.globalData.rankings = [];
             }
             
             resolve(this.globalData.rankings);
@@ -203,7 +219,9 @@ App({
               title: '获取数据失败，请重试',
               icon: 'none'
             });
-            reject(err);
+            // 返回空数组而不是拒绝
+            this.globalData.rankings = [];
+            resolve(this.globalData.rankings);
           });
       } else {
         console.error('云开发未初始化');
@@ -211,7 +229,9 @@ App({
           title: '系统初始化失败',
           icon: 'none'
         });
-        reject(new Error('云开发未初始化'));
+        // 返回空数组而不是拒绝
+        this.globalData.rankings = [];
+        resolve(this.globalData.rankings);
       }
     });
   },
